@@ -45,6 +45,8 @@ const companyAliases: Record<string, string> = {
   spacexinc: 'SpaceX',
   techm: 'Tech Mahindra',
   techmahindra: 'Tech Mahindra',
+  zomato: 'Zomato Ltd.',
+  zomatoltd: 'Zomato Ltd.',
   tcs: 'Tata Consultancy Services',
   tataconsultancyservices: 'Tata Consultancy Services',
 };
@@ -80,6 +82,8 @@ const resolveCompanyInput = (rawName: string) => {
       canonical = 'Alphabet Inc.';
     } else if (cleaned.includes('techmahindra') || cleaned.includes('mahindra')) {
       canonical = 'Tech Mahindra';
+    } else if (cleaned.includes('zomato')) {
+      canonical = 'Zomato Ltd.';
     }
   }
 
@@ -667,6 +671,17 @@ const knownCompanyProfiles: Record<string, InvestmentReport['company']> = {
     summary:
       'Tech Mahindra is a multinational IT services company offering digital transformation and technology solutions across telecommunications, enterprise, and industrial sectors.',
   },
+  zomatoltd: {
+    name: 'Zomato Ltd.',
+    ticker: 'ZOMATO',
+    industry: 'Food Delivery & Restaurant Technology',
+    products: ['Food delivery marketplace', 'Dine-out discovery', 'Cloud kitchens', 'Restaurant reviews', 'Subscription services'],
+    businessModel:
+      'Operates a restaurant discovery and food delivery platform that connects consumers, restaurants, and delivery partners through marketplace, subscription, and advertising services.',
+    summary:
+      'Zomato Ltd. is a restaurant technology company offering food delivery, dine-out discovery, and cloud kitchen services through an online marketplace.',
+    logoUrl: 'https://logo.clearbit.com/zomato.com',
+  },
 };
 
 const knownFinancialProfiles: Record<string, InvestmentReport['financials']> = {
@@ -796,6 +811,27 @@ const knownFinancialProfiles: Record<string, InvestmentReport['financials']> = {
       marketPosition: 90,
     },
   },
+  zomatoltd: {
+    revenueTrends:
+      'Zomato grows through food delivery marketplace volume, dine-out discovery, and cloud kitchen expansion.',
+    profitability:
+      'Profitability is improving as delivery efficiency and subscription revenue grow, though unit economics remain under pressure.',
+    margins:
+      'Margins are moderate for a marketplace model, with potential improvement from scale and premium subscription offerings.',
+    debtLevel:
+      'Zomato operates with manageable debt and focuses on cash flow from operations and capital-efficient delivery partnerships.',
+    cashFlow:
+      'Cash flow is supported by commission revenue, ad sales, and subscription services, balanced by delivery operations investment.',
+    growthIndicators:
+      'Growth is driven by expanding delivery volume, larger dine-out discovery adoption, and higher subscription retention.',
+    scores: {
+      growth: 75,
+      profitability: 62,
+      stability: 70,
+      innovation: 72,
+      marketPosition: 80,
+    },
+  },
 };
 
 const knownNewsFacts: Record<string, SearchResult[]> = {
@@ -857,19 +893,38 @@ const knownNewsFacts: Record<string, SearchResult[]> = {
       headlineSummary: 'NVIDIA retains its leadership position in high-growth AI data center GPU demand.',
     },
   ],
+  zomatoltd: [
+    {
+      title: 'Zomato expands quick commerce and delivery offerings to reach more customers.',
+      snippet: 'Zomato continues investing in quick commerce and cloud kitchen capabilities to grow order volume.',
+      source: 'Company Announcement',
+      date: '2026-06-10',
+      verified: true,
+      headlineSummary: 'Zomato is expanding delivery services and quick commerce operations to capture more restaurant demand.',
+    },
+    {
+      title: 'Zomato launches premium subscription plans to increase customer loyalty.',
+      snippet: 'New subscription tiers aim to boost repeat orders and monetization from dine-out and food delivery users.',
+      source: 'Industry News',
+      date: '2026-06-05',
+      verified: true,
+      headlineSummary: 'Zomato introduces higher-value subscription plans to improve customer stickiness and revenue per user.',
+    },
+  ],
 };
 
 export async function fetchCompanyNewsAndFacts(companyName: string): Promise<NewsFetchResult> {
   const { key: profileKey } = resolveCompanyInput(companyName);
   const newsApiKey = import.meta.env.VITE_NEWS_API_KEY;
   const knownFacts = knownNewsFacts[profileKey];
+  const profileFallback = knownCompanyProfiles[profileKey];
   const fallbackThemes = inferNewsThemes({
     name: companyName,
-    ticker: undefined,
-    industry: 'Unknown',
-    products: [],
-    businessModel: 'Unavailable',
-    summary: `${companyName} — inferred themes due to unavailable news.`,
+    ticker: profileFallback?.ticker,
+    industry: profileFallback?.industry || 'Unknown',
+    products: profileFallback?.products || [],
+    businessModel: profileFallback?.businessModel || 'Unavailable',
+    summary: profileFallback?.summary || `${companyName} — inferred themes due to unavailable news.`,
   });
 
   if (!newsApiKey) {
