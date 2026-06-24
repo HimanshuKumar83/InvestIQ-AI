@@ -51,10 +51,25 @@ const companyAliases: Record<string, string> = {
 
 const resolveCompanyInput = (rawName: string) => {
   const cleaned = normalizeName(rawName);
-  let canonical = companyAliases[cleaned] || rawName.trim();
+
+  const findAlias = (input: string) => {
+    if (companyAliases[input]) {
+      return companyAliases[input];
+    }
+
+    for (const alias of Object.keys(companyAliases)) {
+      if (input.includes(alias)) {
+        return companyAliases[alias];
+      }
+    }
+
+    return undefined;
+  };
+
+  let canonical = findAlias(cleaned) || rawName.trim();
 
   // Fuzzy fallback for common known company patterns and typos.
-  if (!companyAliases[cleaned]) {
+  if (!findAlias(cleaned)) {
     if (cleaned.includes('spacex') || /spacex|spacexinc|spacexcompany/.test(cleaned)) {
       canonical = 'SpaceX';
     } else if (cleaned.includes('spotify')) {
@@ -63,6 +78,8 @@ const resolveCompanyInput = (rawName: string) => {
       canonical = 'Meta Platforms, Inc.';
     } else if (cleaned.includes('google') || cleaned.includes('alphabet')) {
       canonical = 'Alphabet Inc.';
+    } else if (cleaned.includes('techmahindra') || cleaned.includes('mahindra')) {
+      canonical = 'Tech Mahindra';
     }
   }
 
@@ -639,6 +656,16 @@ const knownCompanyProfiles: Record<string, InvestmentReport['company']> = {
       'Develops and operates reusable launch vehicles and satellite internet infrastructure to serve commercial, government, and direct-to-consumer markets.',
     summary:
       'SpaceX is an aerospace manufacturer and space transport company building reusable rockets and global broadband connectivity with Starlink.',
+  },
+  techmahindra: {
+    name: 'Tech Mahindra',
+    ticker: undefined,
+    industry: 'IT Services, Consulting & Digital Transformation',
+    products: ['Digital transformation services', 'Enterprise IT outsourcing', 'Cloud migration', '5G solutions', 'AI and analytics services'],
+    businessModel:
+      'Provides enterprise digital transformation, consulting, and managed IT services to global customers across telecommunications, banking, manufacturing, and retail.',
+    summary:
+      'Tech Mahindra is a multinational IT services company offering digital transformation and technology solutions across telecommunications, enterprise, and industrial sectors.',
   },
 };
 
