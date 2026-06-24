@@ -631,6 +631,10 @@ export default function Dashboard() {
                 <div className={`text-center py-5 border rounded-xl font-extrabold text-3xl tracking-widest ${getRecBadgeStyles(report.decision.recommendation)}`}>
                   {report.decision.recommendation}
                 </div>
+                <div className="mt-4 text-sm text-zinc-300 leading-relaxed">
+                  <span className="block text-xs uppercase tracking-wider text-zinc-500 mb-1">Recommendation rationale</span>
+                  <p>{report.decision.detailedExplanation}</p>
+                </div>
               </div>
 
               <ConfidenceGauge score={report.decision.confidenceScore} />
