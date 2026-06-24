@@ -41,6 +41,8 @@ const companyAliases: Record<string, string> = {
   ibm: 'IBM Corporation',
   accenture: 'Accenture plc',
   accentureplc: 'Accenture plc',
+  spacex: 'SpaceX',
+  spacexinc: 'SpaceX',
   techm: 'Tech Mahindra',
   techmahindra: 'Tech Mahindra',
   tcs: 'Tata Consultancy Services',
@@ -49,7 +51,21 @@ const companyAliases: Record<string, string> = {
 
 const resolveCompanyInput = (rawName: string) => {
   const cleaned = normalizeName(rawName);
-  const canonical = companyAliases[cleaned] || rawName.trim();
+  let canonical = companyAliases[cleaned] || rawName.trim();
+
+  // Fuzzy fallback for common known company patterns and typos.
+  if (!companyAliases[cleaned]) {
+    if (cleaned.includes('spacex') || /spacex|spacexinc|spacexcompany/.test(cleaned)) {
+      canonical = 'SpaceX';
+    } else if (cleaned.includes('spotify')) {
+      canonical = 'Spotify Technology';
+    } else if (cleaned.includes('facebook') || cleaned.includes('meta')) {
+      canonical = 'Meta Platforms, Inc.';
+    } else if (cleaned.includes('google') || cleaned.includes('alphabet')) {
+      canonical = 'Alphabet Inc.';
+    }
+  }
+
   const key = normalizeName(canonical);
   return {
     canonicalName: canonical,
@@ -58,11 +74,70 @@ const resolveCompanyInput = (rawName: string) => {
   };
 };
 
+const inferIndustryFromName = (companyName: string): string => {
+  const normalized = companyName.toLowerCase();
+  if (/space|rocket|launch|starlink|aerospace|orbital|satellite/.test(normalized)) {
+    return 'Aerospace & Space Transportation';
+  }
+  if (/bank|fintech|finance|capital|crypto|coin|wallet|broker|payments|payment/.test(normalized)) {
+    return 'Financial Services & FinTech';
+  }
+  if (/health|biotech|pharma|medical|clinic|wellness|healthcare/.test(normalized)) {
+    return 'Healthcare & Biotechnology';
+  }
+  if (/education|edtech|learning|academy|tutor|school/.test(normalized)) {
+    return 'Education Technology';
+  }
+  if (/cloud|software|saas|platform|app|dev|cyber|security|data/.test(normalized)) {
+    return 'Software & Cloud Services';
+  }
+  if (/retail|ecommerce|shop|market|commerce|delivery|logistics/.test(normalized)) {
+    return 'Retail & E-commerce';
+  }
+  if (/consumer|electronics|device|mobile|hardware|wearable/.test(normalized)) {
+    return 'Consumer Electronics & Devices';
+  }
+  if (/auto|electric|ev|mobility|vehicle|car|truck/.test(normalized)) {
+    return 'Automotive & Mobility';
+  }
+  if (/energy|solar|wind|renewable|oil|gas|power|utility/.test(normalized)) {
+    return 'Energy & Utilities';
+  }
+  if (/media|entertainment|film|music|stream|social|content/.test(normalized)) {
+    return 'Media & Entertainment';
+  }
+  return 'General Technology';
+};
+
 // Validate that the competitor entry is company-specific and not a generic placeholder.
 const isCompetitorEntryValid = (entry: CompetitorEntry) => {
   const normalizedText = `${entry.name} ${entry.reason} ${entry.explanation}`.toLowerCase();
   const invalidPatterns = /(other firms|comparable peers|industry-specific differentiation|placeholder|unavailable|general industry|broad sector)/;
   return entry.name.trim().length > 0 && !invalidPatterns.test(normalizedText);
+};
+
+const tryParseJson = (text: string): any => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const objectMatch = text.match(/\{[\s\S]*\}/);
+    if (objectMatch) {
+      try {
+        return JSON.parse(objectMatch[0]);
+      } catch (ignored) {
+        // continue to fallback
+      }
+    }
+    const arrayMatch = text.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      try {
+        return JSON.parse(arrayMatch[0]);
+      } catch (ignored) {
+        // continue to fallback
+      }
+    }
+    return null;
+  }
 };
 
 const isValidNewsItem = (item: SearchResult) => {
@@ -154,6 +229,31 @@ const inferCompetitorsFromIndustry = (company: InvestmentReport['company']): Inv
       marketPosition: 'Semiconductor and AI computing competitor with strong technology focus.',
       moat: 'Advanced IP, software ecosystem, and fab/customer relationships.',
       threats: ['Export controls', 'Industry cyclicality', 'Customer concentration'],
+    };
+  }
+
+  if (/aerospace|space transportation|rocket|launch|satellite|starlink/i.test(industry)) {
+    return {
+      competitors: [
+        {
+          name: 'Blue Origin',
+          reason: 'Commercial space launch company focused on reusable launch vehicles and orbital services.',
+          explanation: 'Competes on reusable rocket technology and government/commerce launch contracts.',
+        },
+        {
+          name: 'United Launch Alliance',
+          reason: 'Established launch provider for U.S. government and commercial missions.',
+          explanation: 'Competes on reliable national security launches and diversified orbital launch services.',
+        },
+        {
+          name: 'Lockheed Martin',
+          reason: 'Defense and aerospace firm with significant space systems and launch vehicle capabilities.',
+          explanation: 'Competes on large government space programs, satellite integration, and launch systems.',
+        },
+      ],
+      marketPosition: 'Leading commercial space and aerospace competitor with government and commercial launch exposure.',
+      moat: 'Reusable launch technology, integrated spacecraft capabilities, and government relationships.',
+      threats: ['Launch failures', 'Regulatory approvals', 'New entrant competition'],
     };
   }
 
@@ -372,6 +472,34 @@ const inferNewsThemes = (company: InvestmentReport['company']): SearchResult[] =
       },
     ];
   }
+  if (/spacex/i.test(company.name) || /aerospace|space|rocket|launch/i.test(industry)) {
+    return [
+      {
+        title: 'Space launch cadence remains the leading indicator for SpaceX operational momentum.',
+        headlineSummary: 'SpaceX continues frequent Falcon 9 and Starship test activity as a core operational driver.',
+        snippet: 'Launch cadence and contract awards are primary performance signals for SpaceX.',
+        source: 'Inferred Theme',
+        date: new Date().toISOString().slice(0, 10),
+        verified: false,
+      },
+      {
+        title: 'Starlink subscriber growth is the central commercial revenue thesis for SpaceX.',
+        headlineSummary: 'Starlink broadband adoption is the major growth lever supporting SpaceX cash flow.',
+        snippet: 'SpaceX is building global satellite internet capacity to monetize directly to consumers and enterprises.',
+        source: 'Inferred Theme',
+        date: new Date().toISOString().slice(0, 10),
+        verified: false,
+      },
+      {
+        title: 'Starship development and regulatory approvals remain key execution risks.',
+        headlineSummary: 'Starship progress is critical, but test cadence and approvals are material risk factors.',
+        snippet: 'Regulatory and technical execution are the main uncertainties for SpaceX’s long-term thesis.',
+        source: 'Inferred Theme',
+        date: new Date().toISOString().slice(0, 10),
+        verified: false,
+      },
+    ];
+  }
   if (/tech mahindra/i.test(company.name) || /it services|consulting|technology services|business process/i.test(industry)) {
     return [
       {
@@ -502,6 +630,16 @@ const knownCompanyProfiles: Record<string, InvestmentReport['company']> = {
     summary:
       'NVIDIA Corporation specializes in graphics processing units and AI hardware/software platforms used across gaming, data center, and enterprise AI markets.',
   },
+  spacex: {
+    name: 'SpaceX',
+    ticker: undefined,
+    industry: 'Aerospace & Space Transportation',
+    products: ['Falcon 9', 'Falcon Heavy', 'Starship', 'Starlink', 'Rideshare Launch Services'],
+    businessModel:
+      'Develops and operates reusable launch vehicles and satellite internet infrastructure to serve commercial, government, and direct-to-consumer markets.',
+    summary:
+      'SpaceX is an aerospace manufacturer and space transport company building reusable rockets and global broadband connectivity with Starlink.',
+  },
 };
 
 const knownFinancialProfiles: Record<string, InvestmentReport['financials']> = {
@@ -610,6 +748,27 @@ const knownFinancialProfiles: Record<string, InvestmentReport['financials']> = {
       marketPosition: 94,
     },
   },
+  spacex: {
+    revenueTrends:
+      'SpaceX revenue is driven by commercial and government launch services, plus subscription sales from Starlink broadband.',
+    profitability:
+      'SpaceX has reinvested heavily in Starship and launch infrastructure, with selective profitability in Falcon launch operations.',
+    margins:
+      'Launch services deliver higher margin revenue, while capital-intensive R&D and spacecraft development compress overall margins.',
+    debtLevel:
+      'SpaceX uses project financing for Starship and satellite launches, while maintaining strong capital support through private funding.',
+    cashFlow:
+      'Operational cash flow is supported by launch contracts and Starlink subscriber revenue, with reinvestment into vehicle development.',
+    growthIndicators:
+      'Starlink rollout and Starship launch cadence are the primary growth drivers in the aerospace and space infrastructure business.',
+    scores: {
+      growth: 88,
+      profitability: 60,
+      stability: 65,
+      innovation: 95,
+      marketPosition: 90,
+    },
+  },
 };
 
 const knownNewsFacts: Record<string, SearchResult[]> = {
@@ -696,40 +855,51 @@ export async function fetchCompanyNewsAndFacts(companyName: string): Promise<New
     };
   }
 
-  const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
-    companyName
-  )}&pageSize=5&sortBy=publishedAt&language=en&apiKey=${newsApiKey}`;
+  const buildUrl = (q: string) =>
+    `https://newsapi.org/v2/everything?q=${encodeURIComponent(q)}&pageSize=5&sortBy=publishedAt&language=en&apiKey=${newsApiKey}`;
 
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch (error: any) {
-    const diagnostic = `News API fetch failed: ${error?.message || String(error)}.`;
-    console.warn(diagnostic, error);
-    return {
-      articles: knownFacts?.length ? knownFacts : fallbackThemes,
-      source: knownFacts?.length ? 'known' : 'fallback',
-      diagnostic,
-    };
+  const searchQueries = [
+    `${companyName}`,
+    `"${companyName}"`,
+    `${companyName} news`,
+    companyName.replace(/\s+/g, ''),
+  ];
+
+  let response: Response | null = null;
+  let lastDiagnostic = '';
+  let data: any = null;
+
+  for (const query of searchQueries) {
+    const url = buildUrl(query);
+    try {
+      response = await fetch(url);
+    } catch (error: any) {
+      lastDiagnostic = `News API fetch failed for query "${query}": ${error?.message || String(error)}.`;
+      console.warn(lastDiagnostic, error);
+      continue;
+    }
+
+    const quotaRemaining = response.headers.get('x-ratelimit-remaining') || response.headers.get('X-RateLimit-Remaining');
+    if (!response.ok) {
+      const bodyText = await response.text();
+      lastDiagnostic = `News API error for query "${query}": ${response.status} ${response.statusText}. Body: ${bodyText}. Remaining quota: ${quotaRemaining ?? 'unknown'}.`;
+      console.warn(lastDiagnostic);
+      continue;
+    }
+
+    data = await response.json();
+    if (!Array.isArray(data.articles) || data.articles.length === 0) {
+      lastDiagnostic = `News API returned no articles for query "${query}". Response body: ${JSON.stringify(data).slice(0, 500)}. Remaining quota: ${quotaRemaining ?? 'unknown'}.`;
+      console.warn(lastDiagnostic);
+      continue;
+    }
+
+    break;
   }
 
-  const quotaRemaining = response.headers.get('x-ratelimit-remaining') || response.headers.get('X-RateLimit-Remaining');
-
-  if (!response.ok) {
-    const bodyText = await response.text();
-    const diagnostic = `News API error ${response.status} ${response.statusText}. Body: ${bodyText}. Remaining quota: ${quotaRemaining ?? 'unknown'}.`;
-    console.warn(diagnostic);
-    return {
-      articles: knownFacts?.length ? knownFacts : fallbackThemes,
-      source: knownFacts?.length ? 'known' : 'fallback',
-      diagnostic,
-    };
-  }
-
-  const data = await response.json();
-  if (!Array.isArray(data.articles) || data.articles.length === 0) {
-    const diagnostic = `News API returned no articles. Response body: ${JSON.stringify(data).slice(0, 500)}. Remaining quota: ${quotaRemaining ?? 'unknown'}.`;
-    console.warn(diagnostic);
+  if (!data || !Array.isArray(data.articles) || data.articles.length === 0) {
+    const diagnostic =
+      lastDiagnostic || 'News API returned no usable articles after multiple query attempts.';
     return {
       articles: knownFacts?.length ? knownFacts : fallbackThemes,
       source: knownFacts?.length ? 'known' : 'fallback',
@@ -791,22 +961,22 @@ export async function runResearchPipeline(
     console.log(`Using known company profile for ${companyData.name}`);
   } else {
     const companyRes = await callLLM(companyPrompt, 'You are a professional business research analyst. Provide verifiable facts when possible.');
-    try {
-      const parsed = JSON.parse(companyRes.text);
+    const parsed = tryParseJson(companyRes.text);
+    if (parsed && typeof parsed === 'object') {
       companyData = {
         name: parsed.name || normalizedName,
         ticker: parsed.ticker || undefined,
-        industry: parsed.industry || 'Unknown',
-        products: parsed.products || [],
+        industry: parsed.industry || inferIndustryFromName(normalizedName),
+        products: Array.isArray(parsed.products) ? parsed.products : [],
         businessModel: parsed.businessModel || 'Unknown',
         summary: parsed.summary || `${normalizedName} — summary not fully verified.`,
       };
-    } catch (e) {
-      console.warn('Company agent returned non-JSON or unparseable response; using minimal context.', e);
+    } else {
+      console.warn('Company agent returned non-JSON or unparseable response; using minimal context.', companyRes.text);
       companyData = knownCompanyProfiles[profileKey] || {
         name: normalizedName,
         ticker: undefined,
-        industry: 'Unknown',
+        industry: inferIndustryFromName(normalizedName),
         products: [],
         businessModel: 'Unknown',
         summary: `${normalizedName} — summary not fully verified.`,
