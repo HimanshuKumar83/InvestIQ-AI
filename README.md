@@ -39,9 +39,14 @@ npm run build
 - Create a local `.env` file (DO NOT commit `.env`):
 
 ```
-VITE_NEWS_API_KEY=your_news_api_key_here
-# (Optional) any LLM API keys your `src/llm.ts` uses
-```
+VITE_GEMINI_API_KEY=AIzaSyBAeoGboZxGYw_xrGoyocIVUajd4ni8iw8
+VITE_NEWS_API_KEY =58a51cb11660c4030e9bba081eb7c917
+VITE_FINNHUB_API_KEY=d8ub7g1r01qinhugu0qgd8ub7g1r01qinhugu0r0
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Deployed Link: 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Notes:
 - The app prefers a live News API key; if none is set the pipeline falls back to curated `knownNewsFacts` or inferred themes and logs diagnostics.
