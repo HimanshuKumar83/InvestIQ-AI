@@ -39,8 +39,8 @@ export default function RadarChart({ scores }: RadarChartProps) {
   }).join(' ');
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 bg-zinc-950/40 rounded-xl border border-zinc-800/80 backdrop-blur-md">
-      <h4 className="text-sm font-semibold text-zinc-300 mb-4 tracking-wide uppercase">Financial Score Matrix</h4>
+    <div className="flex flex-col items-center justify-center p-4 bg-slate-900 rounded-3xl border border-slate-700 shadow-sm">
+      <h4 className="text-xs font-bold text-slate-400 mb-4 tracking-wide uppercase">Financial Score Matrix</h4>
       <div className="relative w-[300px] h-[300px]">
         <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full">
           {gridRings.map((r, ri) => (
@@ -49,7 +49,7 @@ export default function RadarChart({ scores }: RadarChartProps) {
               cx={center}
               cy={center}
               r={r}
-              className="fill-none stroke-zinc-800/60"
+              className="fill-none stroke-slate-200"
               strokeWidth="1"
             />
           ))}
@@ -63,7 +63,7 @@ export default function RadarChart({ scores }: RadarChartProps) {
                 y1={center}
                 x2={edge.x}
                 y2={edge.y}
-                className="stroke-zinc-800/60"
+                className="stroke-slate-200"
                 strokeWidth="1"
               />
             );
@@ -71,7 +71,7 @@ export default function RadarChart({ scores }: RadarChartProps) {
 
           <polygon
             points={points}
-            className="fill-cyan-500/20 stroke-cyan-400"
+            className="fill-blue-500/10 stroke-blue-500"
             strokeWidth="2.5"
           />
 
@@ -83,7 +83,7 @@ export default function RadarChart({ scores }: RadarChartProps) {
                 cx={coord.x}
                 cy={coord.y}
                 r="4.5"
-                className="fill-cyan-400 stroke-zinc-950"
+                className="fill-blue-600 stroke-white"
                 strokeWidth="1.5"
               />
             );
@@ -100,9 +100,9 @@ export default function RadarChart({ scores }: RadarChartProps) {
                 key={i}
                 x={labelCoord.x}
                 y={labelCoord.y + 4}
-                fill="#d1d5db"
-                fontSize="10"
-                fontWeight="600"
+                fill="#475569"
+                fontSize="9"
+                fontWeight="700"
                 textAnchor={textAnchor}
                 className="font-mono tracking-wide"
               >

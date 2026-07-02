@@ -1,4 +1,4 @@
-export type Recommendation = 'INVEST' | 'WATCH' | 'PASS';
+export type Recommendation = 'BUY' | 'HOLD' | 'PASS';
 
 export interface CompanyData {
   name: string;
@@ -8,6 +8,18 @@ export interface CompanyData {
   businessModel: string;
   summary: string;
   logoUrl?: string;
+  companyApiSource?: string;
+  apiVerified?: boolean;
+  apiMetrics?: {
+    revenue?: number;
+    revenueGrowth?: number;
+    profitMargin?: number;
+    peRatio?: number;
+    roe?: number;
+    debtEquity?: number;
+    currentRatio?: number;
+    marketCapitalization?: number;
+  };
 }
 
 export interface CompetitorEntry {
@@ -54,6 +66,9 @@ export interface NewsData {
   controversies: string[];
   developments: string[];
   sentimentSummary: string;
+  sentimentScore?: number;
+  positivePills?: string[];
+  negativePills?: string[];
   disclaimer?: string;
 }
 
@@ -95,6 +110,25 @@ export interface MissingInfoDetector {
   impactOnVerdict: string;
 }
 
+export interface ModelFeatures {
+  growthPotential: number;
+  profitabilityScore: number;
+  stabilityScore: number;
+  innovationScore: number;
+  moatStrength: number;
+  newsSentiment: number;
+  riskExposure: number;
+  executionRisk: number;
+  marketPositionStrength: number;
+}
+
+export interface ModelPrediction {
+  score: number;
+  recommendation: Recommendation;
+  explanation: string;
+  featureWeights: Record<string, number>;
+}
+
 export interface FinalDecision {
   recommendation: Recommendation;
   baseScore: number;
@@ -106,8 +140,10 @@ export interface FinalDecision {
   coverageLabel: 'Excellent' | 'Partial' | 'Limited';
   topReasons: string[];
   topRisks: string[];
+  keyCatalysts?: string[];
   shortSummary: string;
   detailedExplanation: string;
+  confidenceReason: string;
   sourcesUsed: string[];
   whyAlternativeRejected: string;
 }
