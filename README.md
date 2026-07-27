@@ -57,8 +57,8 @@ npm run build
 Create a local `.env` file in the project root:
 
 ```env
-VITE_TAVILY_API_KEY=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
-VITE_GEMINI_API_KEY=AIzaSyBAeoGboZxGYw_xrGoyocIVUajd4ni8iw8
+VITE_TAVILY_API_KEY=put your api key here
+VITE_GEMINI_API_KEY= put your api key here
 ```
 
 ### Deployed link
